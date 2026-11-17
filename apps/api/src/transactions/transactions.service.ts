@@ -27,7 +27,24 @@ export class TransactionsService {
       new Date(filters.dateFrom) > new Date(filters.dateTo)
     )
       throw new BadRequestException('Invalid date range');
-    return (await this.repository.list(userId, filters)).map(serialize);
+    const result = await this.repository.list(userId, filters);
+    if (filters.page) {
+      const [items, total] = result as [
+        Awaited<ReturnType<TransactionsRepository['find']>>[],
+        number,
+      ];
+      return {
+        items: items.map((item) => serialize(item!)),
+        total,
+        page: filters.page,
+        pageSize: 10,
+      };
+    }
+    return (
+      result as NonNullable<
+        Awaited<ReturnType<TransactionsRepository['find']>>
+      >[]
+    ).map(serialize);
   }
   async find(userId: string, id: string) {
     const row = await this.repository.find(userId, id);

@@ -29,18 +29,25 @@ export class TransactionsRepository {
     });
   }
   list(userId: string, filters: ListTransactionsDto) {
-    return this.prisma.transaction.findMany({
-      where: {
-        userId,
-        type: filters.type,
-        categoryId: filters.categoryId,
-        date: {
-          gte: filters.dateFrom ? new Date(filters.dateFrom) : undefined,
-          lte: filters.dateTo ? new Date(filters.dateTo) : undefined,
-        },
+    const where = {
+      userId,
+      type: filters.type,
+      categoryId: filters.categoryId,
+      date: {
+        gte: filters.dateFrom ? new Date(filters.dateFrom) : undefined,
+        lte: filters.dateTo ? new Date(filters.dateTo) : undefined,
       },
+    };
+    const items = this.prisma.transaction.findMany({
+      where,
       orderBy: [{ date: 'desc' }, { id: 'desc' }],
+      ...(filters.page ? { skip: (filters.page - 1) * 10, take: 10 } : {}),
     });
+    if (!filters.page) return items;
+    return this.prisma.$transaction(
+      [items, this.prisma.transaction.count({ where })],
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+    );
   }
   find(userId: string, id: string) {
     return this.prisma.transaction.findFirst({ where: { id, userId } });

@@ -230,6 +230,65 @@ test(
         (await req('/transactions', 'GET', undefined, b)).body,
         [],
       );
+      assert.deepEqual(
+        (await req('/transactions?page=1', 'GET', undefined, b)).body,
+        {
+          items: [],
+          total: 0,
+          page: 1,
+          pageSize: 10,
+        },
+      );
+      for (let count = 4; count <= 21; count++) {
+        await req('/transactions', 'POST', value, a);
+        if ([10, 11, 21].includes(count)) {
+          const page = await req('/transactions?page=1', 'GET', undefined, a);
+          assert.equal(page.body.total, count);
+          assert.equal(page.body.items.length, 10);
+          const last = await req(
+            `/transactions?page=${Math.ceil(count / 10)}`,
+            'GET',
+            undefined,
+            a,
+          );
+          assert.equal(last.body.items.length, count % 10 || 10);
+        }
+      }
+      const first = await req(
+        '/transactions?page=1&type=Income',
+        'GET',
+        undefined,
+        a,
+      );
+      const second = await req(
+        '/transactions?page=2&type=Income',
+        'GET',
+        undefined,
+        a,
+      );
+      assert.equal(first.body.total, 20);
+      assert.equal(second.body.total, 20);
+      assert.equal(
+        new Set(
+          [...first.body.items, ...second.body.items].map(
+            (row: { id: string }) => row.id,
+          ),
+        ).size,
+        20,
+      );
+      assert.equal(
+        (await req('/transactions?page=0', 'GET', undefined, a)).status,
+        400,
+      );
+      assert.equal(
+        (await req('/transactions?page=abc', 'GET', undefined, a)).status,
+        400,
+      );
+      assert.equal(
+        (await req('/transactions?page=99', 'GET', undefined, a)).body.items
+          .length,
+        0,
+      );
       assert.equal(
         (await req(`/categories/${other.body.id}`, 'DELETE', undefined, b))
           .status,

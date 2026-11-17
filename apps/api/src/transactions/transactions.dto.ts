@@ -43,6 +43,15 @@ export class UpdateTransactionDto {
   @present @IsDefined() @IsUUID() categoryId?: string;
 }
 export class ListTransactionsDto {
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : value,
+  )
+  @present
+  @IsDefined()
+  @IsInt()
+  @Min(1)
+  @Max(1000000)
+  page?: number;
   @present
   @IsDefined()
   @IsString()

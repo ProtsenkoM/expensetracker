@@ -1,8 +1,8 @@
 import 'server-only';
-import { cookies } from 'next/headers';
 import { backendFetch } from '@/shared/api/backend';
+import { getSessionToken } from '@/shared/auth/session-cookie';
 
-export const sessionCookie = 'expense-tracker-session';
+export { sessionCookie } from '@/shared/auth/session-cookie';
 export type User = { id: string; name: string; email: string };
 export type SessionResult =
   | { status: 'authenticated'; user: User }
@@ -10,7 +10,7 @@ export type SessionResult =
   | { status: 'unavailable' };
 
 export async function getSession(): Promise<SessionResult> {
-  const token = (await cookies()).get(sessionCookie)?.value;
+  const token = await getSessionToken();
   if (!token) return { status: 'anonymous' };
   try {
     const response = await backendFetch('/auth/me', {

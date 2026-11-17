@@ -1,0 +1,38 @@
+{
+  "name": "expense-tracker",
+  "version": "0.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=24.11.0 <25",
+    "npm": ">=11 <12"
+  },
+  "packageManager": "npm@11.6.2",
+  "scripts": {
+    "dev": "concurrently --kill-others --names web,api \"npm run dev:web\" \"npm run dev:api\"",
+    "dev:web": "npm run dev --workspace=@expense-tracker/web",
+    "dev:api": "npm run dev --workspace=@expense-tracker/api",
+    "build": "npm run build --workspaces",
+    "lint": "npm run lint --workspaces",
+    "typecheck": "npm run typecheck --workspaces",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:up": "docker compose up -d --wait postgres",
+    "db:down": "docker compose down",
+    "db:generate": "npm run db:generate --workspace=@expense-tracker/api",
+    "db:migrate": "npm run db:migrate --workspace=@expense-tracker/api --",
+    "db:studio": "npm run db:studio --workspace=@expense-tracker/api"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@types/node": "24.19.2",
+    "concurrently": "9.2.5",
+    "eslint": "9.39.5",
+    "eslint-config-prettier": "10.1.8",
+    "prettier": "3.9.10",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.2"
+  }
+}

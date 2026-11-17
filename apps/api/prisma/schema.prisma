@@ -1,0 +1,55 @@
+generator client {
+  provider               = "prisma-client"
+  output                 = "../src/generated/prisma"
+  moduleFormat           = "esm"
+  generatedFileExtension = "ts"
+  importFileExtension    = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String   @db.VarChar(100)
+  email        String   @unique @db.VarChar(320)
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  categories   Category[]
+  transactions Transaction[]
+}
+
+model Category {
+  id     String @id @default(uuid()) @db.Uuid
+  name   String @db.VarChar(100)
+  color  String @db.VarChar(7)
+  icon   String @db.VarChar(100)
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@index([userId])
+}
+
+enum TransactionType {
+  Income
+  Expense
+}
+
+model Transaction {
+  id          String          @id @default(uuid()) @db.Uuid
+  amount      Decimal         @db.Decimal(18, 2)
+  type        TransactionType
+  description String?
+  date        DateTime
+  categoryId  String          @db.Uuid
+  userId      String          @db.Uuid
+  createdAt   DateTime        @default(now())
+  category    Category        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([categoryId])
+}
